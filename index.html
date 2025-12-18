@@ -2,70 +2,128 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Roblox Combo Checker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>SKY LAND TOOLS</title>
 
 <style>
-body {
+*{box-sizing:border-box}
+body{
   margin:0;
-  font-family: Arial, sans-serif;
-  background: linear-gradient(180deg,#5b0fa6,#3b056f);
-  color:white;
+  font-family:Arial,sans-serif;
+  background:radial-gradient(circle at top,#7b2cbf,#4c0f8c);
+  color:#fff;
 }
-
-.container {
-  max-width:900px;
+.container{
+  max-width:420px;
   margin:auto;
-  padding:20px;
+  padding:16px;
 }
 
-h1 {
+/* TITLE */
+h1{
   text-align:center;
-  margin-bottom:20px;
+  font-size:18px;
+  margin:8px 0 4px;
 }
 
-.stats {
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:15px;
+/* LOGO */
+.logo-box{
+  display:flex;
+  justify-content:center;
+  margin:10px 0 14px;
+}
+.logo{
+  width:80px;height:80px;border-radius:50%;padding:5px;
+  background:linear-gradient(45deg,#22c55e,#a855f7,#22c55e);
+  animation:glow 4s infinite;
+}
+.logo img{width:100%;height:100%;border-radius:50%}
+@keyframes glow{
+  0%{box-shadow:0 0 8px #22c55e}
+  50%{box-shadow:0 0 22px #a855f7}
+  100%{box-shadow:0 0 8px #22c55e}
 }
 
-.card {
-  background:rgba(255,255,255,0.15);
-  padding:15px;
-  border-radius:15px;
-  text-align:center;
-}
-
-.controls {
-  margin:20px 0;
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
-}
-
-button {
+/* USER BAR */
+.user-box{
+  background:#22c55e;
+  color:#000;
   padding:12px;
-  border:none;
-  border-radius:10px;
+  border-radius:16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:14px;
+  font-size:14px;
+}
+.coin{
+  display:flex;
+  align-items:center;
+  gap:6px;
   font-weight:bold;
-  cursor:pointer;
+}
+.coin img{width:20px}
+.logout{
+  background:#dc2626;
+  border:none;
+  color:#fff;
+  padding:6px 12px;
+  border-radius:12px;
+  font-weight:bold;
 }
 
-.start { background:#28a745; color:white; }
-.reset { background:#dc3545; color:white; }
+/* INPUT */
+.box{
+  background:rgba(0,0,0,.35);
+  padding:14px;
+  border-radius:18px;
+  margin-bottom:14px;
+}
+textarea{
+  width:100%;
+  height:120px;
+  border-radius:12px;
+  border:none;
+  padding:10px;
+  resize:none;
+  font-size:13px;
+}
+input[type=file]{display:none}
 
-.output {
-  background:rgba(0,0,0,0.4);
-  padding:15px;
-  border-radius:15px;
-  max-height:400px;
+/* BUTTONS */
+.btn-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:10px;
+}
+button{
+  border:none;
+  border-radius:14px;
+  padding:14px;
+  font-weight:bold;
+  font-size:14px;
+}
+.upload{background:#facc15;color:#000}
+.start{background:#22c55e;color:#000}
+.clear{background:#64748b;color:#fff}
+.download{background:#38bdf8;color:#000}
+.stop{background:#ef4444;color:#fff}
+
+.info{
+  text-align:center;
+  font-size:12px;
+  margin-top:8px;
+}
+
+.output{
+  background:rgba(0,0,0,.45);
+  padding:12px;
+  border-radius:14px;
+  max-height:260px;
   overflow:auto;
-  white-space:pre-wrap;
-  font-family: monospace;
-}
-
-.live {
-  color:#00ff7f;
+  font-family:monospace;
+  font-size:12px;
 }
 </style>
 </head>
@@ -73,93 +131,151 @@ button {
 <body>
 <div class="container">
 
-<h1>ROBLOX COMBO CHECKER</h1>
+<h1>SKY LAND TOOLS</h1>
 
-<div class="stats">
-  <div class="card">AKUN LIVE<br><b id="live">0</b></div>
-  <div class="card">AKUN INVALID<br><b id="invalid">0</b></div>
-  <div class="card">TOTAL COMBO<br><b id="total">0</b></div>
+<div class="logo-box">
+  <div class="logo">
+    <img src="https://files.catbox.moe/hz53ab.jpg">
+  </div>
 </div>
 
-<div class="controls">
-  <input type="file" id="file">
-  <button class="start" onclick="start()">START</button>
-  <button class="reset" onclick="resetAll()">RESET</button>
+<!-- USER -->
+<div class="user-box">
+  <b id="username">-</b>
+  <div class="coin">
+    <img src="https://cdn-icons-png.flaticon.com/512/138/138292.png">
+    <span id="coin">0</span>
+  </div>
+  <button class="logout" onclick="logout()">LOG OUT</button>
 </div>
 
-<div class="output" id="output">
-Belum ada combo diunggah.
+<!-- COMBO INPUT -->
+<div class="box">
+  <textarea id="comboInput" placeholder="Paste combo di sini (username:password)"></textarea>
+
+  <div class="btn-row">
+    <label class="upload">
+      UPLOAD TXT
+      <input type="file" id="file">
+    </label>
+    <button class="clear" onclick="clearCombo()">CLEAR</button>
+  </div>
+
+  <div class="info" id="comboInfo">Combo: 0</div>
 </div>
+
+<!-- ACTION -->
+<div class="box">
+  <div class="btn-row">
+    <button class="start" onclick="start()">START</button>
+    <button class="stop" onclick="stop()">STOP</button>
+  </div>
+  <div class="btn-row">
+    <button class="download" onclick="download()">DOWNLOAD LIVE</button>
+  </div>
+</div>
+
+<!-- OUTPUT -->
+<div class="output" id="output">Ready.</div>
 
 </div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+/* FIREBASE CONFIG (SAMA DENGAN LOGIN) */
+const firebaseConfig = {
+  apiKey: "AIzaSyCkWKmK_UmQtk6UEIset5e6iPmFZj0ZLHc",
+  authDomain: "bugemtoolsdb.firebaseapp.com",
+  databaseURL: "https://bugemtoolsdb-default-rtdb.firebaseio.com",
+  projectId: "bugemtoolsdb",
+  storageBucket: "bugemtoolsdb.firebasestorage.app",
+  messagingSenderId: "52270788635",
+  appId: "1:52270788635:web:59bf1c23406beb872e48be"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const user = localStorage.getItem("skyland_user");
+if(!user) location.href="login.html";
+
+document.getElementById("username").innerText = user;
+
+const userRef = ref(db,"users/"+user);
+const snap = await get(userRef);
+let coin = snap.val().coin || 0;
+document.getElementById("coin").innerText = coin;
+
+/* COMBO HANDLING */
 let combos = [];
+let running = false;
 
-document.getElementById("file").addEventListener("change", e => {
-  const reader = new FileReader();
-  reader.onload = () => {
-    combos = reader.result
-      .split("\n")
-      .map(x => x.trim())
-      .filter(Boolean)
-      .map(x => x.split(":")[0]); // ambil username saja
+function parseCombo(){
+  combos = document.getElementById("comboInput").value
+    .split("\n")
+    .map(x=>x.trim())
+    .filter(Boolean);
+  document.getElementById("comboInfo").innerText = `Combo: ${combos.length}`;
+}
 
-    document.getElementById("total").innerText = combos.length;
+document.getElementById("comboInput").addEventListener("input",parseCombo);
+
+document.getElementById("file").addEventListener("change",e=>{
+  const r=new FileReader();
+  r.onload=()=>{
+    document.getElementById("comboInput").value += "\n"+r.result;
+    parseCombo();
   };
-  reader.readAsText(e.target.files[0]);
+  r.readAsText(e.target.files[0]);
 });
 
-async function start() {
-  if (combos.length === 0) return;
+window.clearCombo=()=>{
+  document.getElementById("comboInput").value="";
+  parseCombo();
+};
 
-  const out = document.getElementById("output");
-  out.innerHTML = "🔍 Checking...\n\n";
+window.start=async()=>{
+  if(running) return;
+  parseCombo();
 
-  const res = await fetch("/api/check", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({ usernames: combos })
-  });
+  if(combos.length===0) return alert("Combo kosong");
+  if(coin<=0) return alert("Koin habis");
 
-  const data = await res.json();
+  running=true;
+  let maxCheck=Math.min(coin,combos.length);
+  let out=document.getElementById("output");
+  out.innerHTML="";
 
-  document.getElementById("live").innerText = data.live;
-  document.getElementById("invalid").innerText = data.invalid;
+  for(let i=0;i<maxCheck;i++){
+    if(!running) break;
+    let line=combos[i];
+    let username=line.split(":")[0];
 
-  out.innerHTML = "";
+    out.innerHTML+=`Checking ${username}...\n`;
+    await new Promise(r=>setTimeout(r,400));
 
-  data.results.forEach(u => {
-    out.innerHTML +=
-`⪻━━━━━═『 ROBLOX LIVE 』═━━━━━⪼
-USER        : ${u.username}
-DISPLAY     : ${u.displayName}
-USER ID     : ${u.userId}
-AGE         : ${u.age} days
-JOIN DATE   : ${u.created}
-FRIENDS     : ${u.friends}
-FOLLOWERS   : ${u.followers}
-GROUPS      : ${u.groups}
-BANNED      : ${u.banned}
-PROFILE     : ${u.profileUrl}
-⪻━━━━━━━━━━━━━━━━━━━━━━⪼
-
-`;
-  });
-
-  if (data.results.length === 0) {
-    out.innerHTML = "❌ Tidak ada akun LIVE.";
+    coin--;
+    document.getElementById("coin").innerText=coin;
   }
-}
 
-function resetAll() {
-  combos = [];
-  document.getElementById("output").innerHTML = "Reset.";
-  document.getElementById("live").innerText = 0;
-  document.getElementById("invalid").innerText = 0;
-  document.getElementById("total").innerText = 0;
-}
+  await update(userRef,{coin:coin});
+  running=false;
+  out.innerHTML+="\nDONE.";
+};
+
+window.stop=()=>running=false;
+
+window.download=()=>{
+  alert("Download hasil LIVE (nanti disambung ke checker API)");
+};
+
+window.logout=()=>{
+  localStorage.removeItem("skyland_user");
+  location.href="login.html";
+};
 </script>
 
 </body>
-</html>
+  </html>
