@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADMIN - SKY LAND</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:radial-gradient(circle at top,#7b2cbf,#4c0f8c);color:#fff}
+.container{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:20px;max-width:500px;margin:auto}
+.logo{width:110px;height:110px;border-radius:50%;padding:6px;margin:0 auto 12px;background:linear-gradient(45deg,#22c55e,#a855f7);box-shadow:0 0 30px #a855f7}
+.logo img{width:100%;height:100%;border-radius:50%}
+h1{text-align:center;font-size:18px;margin:6px 0}
+p{text-align:center;font-size:13px;opacity:.9}
+input,button{width:100%;padding:14px;border:none;border-radius:14px;margin-top:10px;font-weight:bold;cursor:pointer}
+.green{background:#22c55e;color:#000}
+.purple{background:#9333ea;color:#fff}
+.orange{background:#f59e0b;color:#000}
+.gray{background:#374151;color:#fff}
+.red{background:#dc2626;color:#fff}
+.msg{text-align:center;margin-top:10px;font-size:13px}
+#dashboard{display:none}
+.list,.invite-list{background:#4c1d95;border-radius:14px;padding:10px;margin-top:10px;max-height:220px;overflow:auto;font-size:13px}
+.user-item,.invite-item{padding:6px;border-bottom:1px solid rgba(255,255,255,.2);display:flex;justify-content:space-between;align-items:center}
+.user-item button,.invite-item button{padding:2px 6px;border:none;border-radius:6px;cursor:pointer;font-size:12px}
+.user-item button.green{background:#22c55e;color:#000}
+.user-item button.red{background:#dc2626;color:#fff}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- LOGIN -->
+<div id="loginBox">
+  <div class="logo"><img src="https://files.catbox.moe/hz53ab.jpg"></div>
+  <h1>ADMIN LOGIN</h1>
+  <p>Masukan email & password admin</p>
+  <input id="email" placeholder="Email Admin">
+  <input id="password" type="password" placeholder="Password Admin">
+  <button class="green" onclick="loginAdmin()">LOGIN ADMIN</button>
+  <div class="msg" id="msg"></div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <div class="logo"><img src="https://files.catbox.moe/hz53ab.jpg"></div>
+  <h1>WELCOME TO DASHBOARD</h1>
+  <p>CONTROL PANEL ADMIN</p>
+
+  <!-- GENERATE KODE -->
+  <h3>Generator Kode Invite (15 Coin/Kode)</h3>
+  <button class="green" onclick="buatInvite()">Generate Kode Otomatis</button>
+  <div class="invite-list" id="inviteList"></div>
+
+  <!-- USER LIST -->
+  <h3>User Terdaftar</h3>
+  <div class="list" id="userList"></div>
+
+  <!-- KIRIM NOTIF -->
+  <h3>Kirim Notif ke Semua User</h3>
+  <input id="notifMsg" placeholder="Masukkan pesan">
+  <button class="orange" onclick="sendNotif()">Kirim</button>
+
+  <div class="msg" id="dashMsg"></div>
+  <button id="updateBtn" class="gray" onclick="toggleUpdate()">OFF</button>
+  <button class="red" onclick="logout()">LOG OUT</button>
+</div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, set, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCkWKmK_UmQtk6UEIset5e6iPmFZj0ZLHc",
+  authDomain: "bugemtoolsdb.firebaseapp.com",
+  databaseURL: "https://bugemtoolsdb-default-rtdb.firebaseio.com",
+  projectId: "bugemtoolsdb",
+  storageBucket: "bugemtoolsdb.firebasestorage.app",
+  messagingSenderId: "52270788635",
+  appId: "1:52270788635:web:59bf1c23406beb872e48be"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const loginBox = document.getElementById("loginBox");
+const dashboard = document.getElementById("dashboard");
+const dashMsg = document.getElementById("dashMsg");
+const inviteListDiv = document.getElementById("inviteList");
+const userListDiv = document.getElementById("userList");
+const updateBtn = document.getElementById("updateBtn");
+
+// ===== ADMIN LOGIN =====
+const ADMIN_EMAIL = "skylandreal@gmail.com";
+const ADMIN_PASS = "Bugem1976";
+
+window.loginAdmin = ()=>{
+  const e = document.getElementById("email").value.trim();
+  const p = document.getElementById("password").value.trim();
+  if(e===ADMIN_EMAIL && p===ADMIN_PASS){
+    localStorage.setItem("adminLogin","yes");
+    loginBox.style.display="none";
+    dashboard.style.display="block";
+    loadInviteList();
+    loadUserList();
+    initUpdateBtn();
+  } else {
+    document.getElementById("msg").innerText="Email / Password salah!";
+  }
+};
+
+// ===== AUTO LOGIN =====
+if(localStorage.getItem("adminLogin")){
+  loginBox.style.display="none";
+  dashboard.style.display="block";
+  loadInviteList();
+  loadUserList();
+  initUpdateBtn();
+}
+
+// ===== GENERATE KODE OTOMATIS =====
+function randomCode(length=8){
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let s="";
+  for(let i=0;i<length;i++) s+=chars[Math.floor(Math.random()*chars.length)];
+  return "SKYLAND-"+s;
+}
+
+window.buatInvite = async ()=>{
+  const jumlah = parseInt(prompt("Berapa banyak kode yang ingin dibuat?",1));
+  if(!jumlah || jumlah<1) return alert("Jumlah tidak valid");
+
+  const hasil = [];
+  inviteListDiv.innerHTML="";
+  for(let i=0;i<jumlah;i++){
+    const kode = randomCode();
+    const kodeRef = ref(db,"invites/"+kode);
+    await set(kodeRef,{created: Date.now(), coin:15});
+    hasil.push(kode);
+  }
+
+  dashMsg.innerText = `✅ ${hasil.length} Kode berhasil dibuat (15 coin per kode)`;
+  inviteListDiv.innerHTML = hasil.map(k=>`<div>${k} | 15 coin</div>`).join("");
+};
+
+// ===== LOAD INVITE LIST =====
+function loadInviteList(){
+  const invitesRef = ref(db,"invites");
+  onValue(invitesRef, snapshot=>{
+    inviteListDiv.innerHTML = "";
+    snapshot.forEach(childSnap=>{
+      const data = childSnap.val();
+      const div = document.createElement("div");
+      div.className="invite-item";
+      div.innerText = `${childSnap.key} | 🪙 ${data.coin||0}`;
+      inviteListDiv.appendChild(div);
+    });
+  });
+}
+
+// ===== LOAD USER LIST =====
+function loadUserList(){
+  const usersRef = ref(db,"users");
+  onValue(usersRef, snapshot=>{
+    userListDiv.innerHTML="";
+    snapshot.forEach(childSnap=>{
+      const data = childSnap.val();
+      const username = childSnap.key;
+
+      const div = document.createElement("div");
+      div.className="user-item";
+
+      const span = document.createElement("span");
+      span.innerText = `${username} | 🪙 ${data.coin||0}`;
+      div.appendChild(span);
+
+      // Tombol +Coin
+      const addBtn = document.createElement("button");
+      addBtn.className="green";
+      addBtn.innerText = "+Coin";
+      addBtn.addEventListener("click", ()=>{
+        addCoin(username, data.coin||0);
+      });
+      div.appendChild(addBtn);
+
+      // Tombol Hapus
+      const delBtn = document.createElement("button");
+      delBtn.className="red";
+      delBtn.innerText = "Hapus";
+      delBtn.addEventListener("click", ()=>{
+        deleteUser(username);
+      });
+      div.appendChild(delBtn);
+
+      userListDiv.appendChild(div);
+    });
+  });
+}
+
+// ===== ADD COIN =====
+function addCoin(username, oldCoin){
+  const j = parseInt(prompt(`Tambah coin ke ${username}:`,1));
+  if(!j || j<1) return;
+  const userRef = ref(db,"users/"+username);
+  update(userRef,{coin: oldCoin + j});
+  dashMsg.innerText = `✅ Berhasil menambah ${j} coin ke ${username}`;
+}
+
+// ===== DELETE USER =====
+function deleteUser(username){
+  if(!confirm(`Apakah yakin ingin menghapus user ${username}?`)) return;
+  const userRef = ref(db,"users/"+username);
+  set(userRef,null).then(()=>{
+    dashMsg.innerText = `❌ User ${username} berhasil dihapus`;
+  });
+}
+
+// ===== SEND NOTIF =====
+function sendNotif(){
+  const msg = document.getElementById("notifMsg").value.trim();
+  if(!msg) return alert("Pesan tidak boleh kosong");
+  const durasi = parseInt(prompt("Berapa detik notif tampil?",5)) || 5;
+  const notifRef = ref(db,"notif");
+  set(notifRef,{msg,durasi,created:Date.now()}).then(()=>{
+    dashMsg.innerText = "📣 Notif terkirim ke semua user!";
+    document.getElementById("notifMsg").value="";
+  });
+}
+
+// ===== TOGGLE UPDATE =====
+window.toggleUpdate = async ()=>{
+  const statusRef = ref(db,"config/status");
+  const snap = await get(statusRef);
+  const on = snap.exists() && snap.val().maintenance;
+  await set(statusRef,{maintenance:!on});
+  dashMsg.innerText = !on?"🚧 UPDATE AKTIF":"✅ WEBSITE NORMAL";
+  initUpdateBtn();
+};
+
+async function initUpdateBtn(){
+  const statusRef = ref(db,"config/status");
+  const snap = await get(statusRef);
+  const on = snap.exists() && snap.val().maintenance;
+  updateBtn.innerText = on?"ON":"OFF";
+  updateBtn.className = on?"green":"gray";
+}
+
+// ===== LOGOUT =====
+window.logout = ()=>{
+  localStorage.removeItem("adminLogin");
+  location.reload();
+};
+</script>
+</body>
+</html>
