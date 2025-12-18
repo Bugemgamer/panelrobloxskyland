@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Roblox Combo Checker</title>
+
+<style>
+body {
+  margin:0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(180deg,#5b0fa6,#3b056f);
+  color:white;
+}
+
+.container {
+  max-width:900px;
+  margin:auto;
+  padding:20px;
+}
+
+h1 {
+  text-align:center;
+  margin-bottom:20px;
+}
+
+.stats {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:15px;
+}
+
+.card {
+  background:rgba(255,255,255,0.15);
+  padding:15px;
+  border-radius:15px;
+  text-align:center;
+}
+
+.controls {
+  margin:20px 0;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+
+button {
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.start { background:#28a745; color:white; }
+.reset { background:#dc3545; color:white; }
+
+.output {
+  background:rgba(0,0,0,0.4);
+  padding:15px;
+  border-radius:15px;
+  max-height:400px;
+  overflow:auto;
+  white-space:pre-wrap;
+  font-family: monospace;
+}
+
+.live {
+  color:#00ff7f;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>ROBLOX COMBO CHECKER</h1>
+
+<div class="stats">
+  <div class="card">AKUN LIVE<br><b id="live">0</b></div>
+  <div class="card">AKUN INVALID<br><b id="invalid">0</b></div>
+  <div class="card">TOTAL COMBO<br><b id="total">0</b></div>
+</div>
+
+<div class="controls">
+  <input type="file" id="file">
+  <button class="start" onclick="start()">START</button>
+  <button class="reset" onclick="resetAll()">RESET</button>
+</div>
+
+<div class="output" id="output">
+Belum ada combo diunggah.
+</div>
+
+</div>
+
+<script>
+let combos = [];
+
+document.getElementById("file").addEventListener("change", e => {
+  const reader = new FileReader();
+  reader.onload = () => {
+    combos = reader.result
+      .split("\n")
+      .map(x => x.trim())
+      .filter(Boolean)
+      .map(x => x.split(":")[0]); // ambil username saja
+
+    document.getElementById("total").innerText = combos.length;
+  };
+  reader.readAsText(e.target.files[0]);
+});
+
+async function start() {
+  if (combos.length === 0) return;
+
+  const out = document.getElementById("output");
+  out.innerHTML = "🔍 Checking...\n\n";
+
+  const res = await fetch("/api/check", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ usernames: combos })
+  });
+
+  const data = await res.json();
+
+  document.getElementById("live").innerText = data.live;
+  document.getElementById("invalid").innerText = data.invalid;
+
+  out.innerHTML = "";
+
+  data.results.forEach(u => {
+    out.innerHTML +=
+`⪻━━━━━═『 ROBLOX LIVE 』═━━━━━⪼
+USER        : ${u.username}
+DISPLAY     : ${u.displayName}
+USER ID     : ${u.userId}
+AGE         : ${u.age} days
+JOIN DATE   : ${u.created}
+FRIENDS     : ${u.friends}
+FOLLOWERS   : ${u.followers}
+GROUPS      : ${u.groups}
+BANNED      : ${u.banned}
+PROFILE     : ${u.profileUrl}
+⪻━━━━━━━━━━━━━━━━━━━━━━⪼
+
+`;
+  });
+
+  if (data.results.length === 0) {
+    out.innerHTML = "❌ Tidak ada akun LIVE.";
+  }
+}
+
+function resetAll() {
+  combos = [];
+  document.getElementById("output").innerHTML = "Reset.";
+  document.getElementById("live").innerText = 0;
+  document.getElementById("invalid").innerText = 0;
+  document.getElementById("total").innerText = 0;
+}
+</script>
+
+</body>
+</html>
